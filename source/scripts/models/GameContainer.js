@@ -14,9 +14,14 @@ import KeyContainer from "scripts/utility/KeyContainer.js"
 import Geometry from "scripts/utility/Geometry.js"
 import Cartographer from "scripts/utility/Cartographer.js"
 
+import CircleCollider from "scripts/utility/CircleCollider.js"
+import RectangleCollider from "scripts/utility/RectangleCollider.js"
+import SquarePrimitive from "scripts/utility/SquarePrimitive.js"
+import CirclePrimitive from "scripts/utility/CirclePrimitive.js"
+
 const CAMERA_TRANSITION_FRICTION = 0.05
 
-var TRACK_1 = require("sounds/track1.mp3")
+var TRACK_1 = require("sounds/TheMachineInDanger.mp3")
 
 export default class GameContainer extends Pixi.Container {
     constructor() {
@@ -30,6 +35,7 @@ export default class GameContainer extends Pixi.Container {
         this.cameras = new KeyContainer()
         this.monsters = new KeyContainer()
         this.floors = new KeyContainer()
+        this.colliders = []
 
         //this.cartographer = new Cartographer()
 
@@ -65,13 +71,38 @@ export default class GameContainer extends Pixi.Container {
         this.music = new Audio(TRACK_1)
         this.music.loop = true
         this.music.volume = 0.5
-        this.music.play()
+        //this.music.play()
         // console.log("To edit the world, change your mode by hitting 1, 2 or 3.")
         // console.log("To copy the world to your clipboard, run copy(game.data)")
 
         this.tags = {}
 
         //this.cartographer.createMap(this.tiles)
+        // var vector = {x:-4, y:30}
+        // var rotation = 0
+        // var globalOffsetVector = Geometry.convertLocalOffsetToGlobalOffset(vector, rotation)
+        // var localOffsetVector = Geometry.convertGlobalOffsetToLocalOffset(globalOffsetVector, rotation)
+        // console.log('x: ' + localOffsetVector.x +', y: ' + localOffsetVector.y)
+
+        var collider1Position = {x: 40, y: 100}
+        var collider1Scale = {x: 4, y: .5}
+        var collider1Rotation = Math.PI*1.4
+
+        var collider2Position = {x: 0, y: 60}
+        var collider2Scale = {x: 1, y: 1}
+        var collider2Rotation = 0
+
+        this.testSquare1 = new SquarePrimitive(collider1Position, collider1Scale, -1*collider1Rotation)
+        this.testSquare1.game = this
+        this.colliders.push(this.testSquare1.collider)
+        this.testCircle1 = new CirclePrimitive(collider2Position, collider2Scale, -1*collider2Rotation)
+        this.testCircle1.game = this
+        this.colliders.push(this.testCircle1.collider)
+
+        this.colliders.push(this.hero.collider)
+
+        this.addChild(this.testSquare1)
+        this.addChild(this.testCircle1)
     }
     jumpCameraToHero() {
         this.hero.considerTheCamera()
@@ -85,6 +116,7 @@ export default class GameContainer extends Pixi.Container {
     update(delta) {
         // updating entities
         this.hero.update(delta)
+
         this.monsters.children.forEach((monster) => {
             monster.update(delta)
         })
@@ -171,6 +203,17 @@ export default class GameContainer extends Pixi.Container {
                 this.music.play()
             } else{
                 this.music.pause()
+            }
+        }
+
+        this.testSquare1.update()
+        this.testCircle1.update()
+        for(var i = 0; i < this.colliders.length; i++){
+            var curCollider = this.colliders[i]
+            for(var j = 0; j < this.colliders.length; j++){
+                if(i < j){
+                    this.colliders[i].checkForCollision(this.colliders[j])
+                }
             }
         }
     }

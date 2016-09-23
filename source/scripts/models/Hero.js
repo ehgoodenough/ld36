@@ -4,6 +4,8 @@ import Keyb from "keyb"
 import config from "config.js"
 
 import Geometry from "scripts/utility/Geometry.js"
+import RectangleCollider from "scripts/utility/RectangleCollider.js"
+import CircleCollider from "scripts/utility/CircleCollider.js"
 import Input from "scripts/utility/Input.js"
 import Sound from "scripts/utility/Sound.js"
 
@@ -52,6 +54,10 @@ export default class Hero extends Pixi.Sprite {
         this.timeSinceAttack = this.attackCooldownTime
 
         this.monsterRank = "warrior"
+
+        this.collider = new CircleCollider(this.position, this.scale, this.rotation)
+        this.collider.parent = this
+        //this.addChild(this.collider)
     }
     update(delta) {
         // Poll inputs
@@ -205,6 +211,8 @@ export default class Hero extends Pixi.Sprite {
                 })
             }
         }
+
+        this.collider.update(this.position, {x: this.scale.x, y: this.scale.y}, this.rotation)
 
         // Cooldowns
         if(this.beAttackedCooldown > 0) {

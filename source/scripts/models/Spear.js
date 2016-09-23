@@ -8,8 +8,8 @@ var SPEAR_TEXTURE = Pixi.Texture.fromImage(require("images/spear.png"))
 var WALL_HIT_SOUND = new Sound(require("sounds/wallhit.mp3"))
 // The raycast's resolution
 var NUMBER_OF_COLLISION_SAMPLES = 8
-// Half the pixel location of the weapon's center at its most offset position (the top of the image)
-var WEAPON_TILT_OFFSET = 6.5
+// The pixel location, relative to center, of the weapon at its handle
+var WEAPON_TILT_OFFSET = -6
 // The weapon's tile size plus half the player's tile size
 var WEAPON_RANGE = 1.5
 export default class Spear extends Pixi.Sprite {
@@ -27,12 +27,10 @@ export default class Spear extends Pixi.Sprite {
         if(!this.attackHitWall) {
             for(var i = 0; i < NUMBER_OF_COLLISION_SAMPLES && !this.attackHitWall; i++){
                 // Generate sample points for collision checks
-                var samplePoint = new Pixi.Point(0,0)
-                samplePoint.x = this.parent.position.x - Math.cos(this.parent.rotation-Math.PI/2)*i*this.sampleIntervalLength
-                samplePoint.y = this.parent.position.y - Math.sin(this.parent.rotation-Math.PI/2)*i*this.sampleIntervalLength
-                
-                samplePoint.x = samplePoint.x + Math.cos(this.parent.rotation-Math.PI)*(WEAPON_TILT_OFFSET - (WEAPON_TILT_OFFSET/(NUMBER_OF_COLLISION_SAMPLES-1))*(i))
-                samplePoint.y = samplePoint.y + Math.sin(this.parent.rotation-Math.PI)*(WEAPON_TILT_OFFSET - (WEAPON_TILT_OFFSET/(NUMBER_OF_COLLISION_SAMPLES-1))*(i))
+                var samplePoint = new Pixi.Point(this.parent.position.x, this.parent.position.y)
+                var samplePointOffset = new Pixi.Point((WEAPON_TILT_OFFSET - (WEAPON_TILT_OFFSET/(NUMBER_OF_COLLISION_SAMPLES-1))*(i)), i*this.sampleIntervalLength)
+                samplePointOffset = Geometry.convertLocalOffsetToGlobalOffset(samplePointOffset, Math.PI*2 - this.parent.rotation)
+                samplePoint = new Pixi.Point(samplePoint.x + samplePointOffset.x, samplePoint.y + samplePointOffset.y)
 
                 // Check for collision with nearest tile
                 var tileKey = Math.floor(samplePoint.x / config.tile.size) + "-" + Math.floor(samplePoint.y / config.tile.size)
